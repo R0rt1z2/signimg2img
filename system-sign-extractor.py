@@ -1,6 +1,6 @@
 # system-sign unpacker
 # By R0rt1z2
-# simg2img is made anestisb.
+# simg2img is made by anestisb.
 import argparse, subprocess, os
 
 # Define current path
@@ -54,8 +54,8 @@ def unpack():
        print("Unpacking system image...")
        subprocess.call("sudo mkdir system_out",shell=True)
        subprocess.call("sudo mount -r -t ext4 -o loop system.ext4 /test",shell=True)
-       subprocess.call("sudo cp -r /test/* system_out",shell=True)
-       subprocess.call("sudo umount /test",shell=True)
+       subprocess.call("sudo cp -r /mnt/* system_out",shell=True)
+       subprocess.call("sudo umount /mnt",shell=True)
        subprocess.call("sudo chown -R $USER:$USER system_out",shell=True)
        # Other way for print in color? ¯\_(ツ)_/¯
        subprocess.call("echo '\e[32mSystem.img unpacked succsefully at >>system_out<<'",shell=True)
