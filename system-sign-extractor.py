@@ -43,7 +43,7 @@ def check():
 
 # Unpack section.
 def unpack():
-    print("This will unpack your system-sign.img. Press any key for continue\n Press ctrl+c for finish the script")
+    print("This will unpack your system-sign.img. Press any key for continue\nPress ctrl+c for finish the script")
     input()
     print("Deleting magic header from system-sign.img...")
     subprocess.call("dd if=system-sign.img of=system.img bs=$((0x4040)) skip=1",shell=True)
@@ -53,7 +53,7 @@ def unpack():
        subprocess.call("simg2img system.img system.ext4",shell=True)
        print("Unpacking system image...")
        subprocess.call("sudo mkdir system_out",shell=True)
-       subprocess.call("sudo mount -r -t ext4 -o loop system.ext4 /test",shell=True)
+       subprocess.call("sudo mount -r -t ext4 -o loop system.ext4 /mnt",shell=True)
        subprocess.call("sudo cp -r /mnt/* system_out",shell=True)
        subprocess.call("sudo umount /mnt",shell=True)
        subprocess.call("sudo chown -R $USER:$USER system_out",shell=True)
