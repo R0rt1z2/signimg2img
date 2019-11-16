@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+#====================================================#
+#              FILE: signimg2img                     #
+#              AUTHOR: R0rt1z2                       #
+#====================================================#
+
+from argparse import ArgumentParser
+from subprocess import Popen, PIPE, DEVNULL, STDOUT, check_call, call
+import sys
+
+__version__ = '1.0'
+
+if sys.platform.startswith("linux"):
+    print("")
+else:
+    print("Unsopported platform!")
+    exit()
+
+def package():
+    print("Detecting if simg2img is installed...")
+    simg2img = Popen('apt list --installed | grep simg2img', shell=True, bufsize=64, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read().strip().decode('utf-8')
+    if "simg2img" in simg2img:
+       print("simg2img is installed... Continue")
+    else:
+       print("simg2img is not installed, install it for use this tool!")
+       exit()
+
+def system():
+    oldfiles()
+    systemishere = Popen('ls | grep system-sign.img', shell=True, bufsize=64, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read().strip().decode('utf-8')
+    if "system-sign.img" not in systemishere:
+      print("Cannot detect system-sign.img")
+      exit()
+    else:
+      print("Deleting magic header from system-sign.img...")
+      call("dd if=system-sign.img of=system.img bs=$((0x4040)) skip=1",shell=True)
+      print("Converting to ext4 image...")
+      call("simg2img system.img system.ext4",shell=True)
+      print("Unpacking system image...")
+      call("sudo mkdir system_out",shell=True)
+      call("sudo mount -r -t ext4 -o loop system.ext4 /mnt",shell=True)
+      call("sudo cp -r /mnt/* system_out",shell=True)
+      call("sudo umount /mnt",shell=True)
+      call("sudo chown -R $USER:$USER system_out",shell=True)
+      print("system-sign.img extracted at >>system_out<<")
+
+def oldfiles():
+    print("Checking for old files...")
+    files = Popen('ls -all', shell=True, bufsize=64, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read().strip().decode('utf-8')
+    if ".img" in files:
+       print("Detected old files. Deleting them...")
+       call("rm *.img", shell=True)
+    else:
+       print("There's no old files, continue...")
+
+def main():
+    print('signimg2img binary - version: {}\n'.format(__version__))
+    parser = ArgumentParser()
+    parser.add_argument("-s", "--system", action='store_true', dest='systemsign', default=False,
+                        help="Extract system-sign.img")
+    parser.add_argument("-b", "--boot", action='store_true', dest='bootsign', default=False,
+                        help="Extract boot-sign.img")
+    parser.add_argument("-r", "--recovery", action='store_true', dest='recoverysign', default=False,
+                        help="Extract recovery-sign.img")
+    args = parser.parse_args()
+
+    if args.systemsign:
+      print("Selected: Unpack system-sign.img")
+      system()
+    elif args.bootsign:
+      print("Selected: Unpack boot-sign.img")
+      oldfiles()
+      call("dd if=boot-sign.img of=boot.img bs=$((0x4040)) skip=1", shell=True)
+      print("Done, image extracted as boot.img")
+    elif args.recoverysign:
+      print("Selected: Unpack recovery-sign.img")
+      oldfiles()
+      call("dd if=recovery-sign.img of=recovery.img bs=$((0x4040)) skip=1", shell=True)
+      print("Done, image extracted as recovery.img")
+    else:
+      print("No option selected")
+      exit()
+
+if __name__ == "__main__":
+   main()
