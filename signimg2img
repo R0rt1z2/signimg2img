@@ -7,6 +7,7 @@
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, check_call, call
 import sys
+import glob
 
 __version__ = '1.1'
 
@@ -51,19 +52,21 @@ def system():
       display("Converting to ext4 image...")
       call("simg2img system.img system.ext4",shell=True)
       display("Unpacking system image...")
-      call("sudo mkdir system_out",shell=True)
+      os.mkdir("system_out")
       call("sudo mount -r -t ext4 -o loop system.ext4 /mnt",shell=True)
       call("sudo cp -r /mnt/* system_out",shell=True)
       call("sudo umount /mnt",shell=True)
       call("sudo chown -R $USER:$USER system_out",shell=True)
-      display("system-sign.img extracted at >>system_out<<")
+      display("system-sign.img extracted at >>system_out<\ns")
 
 def oldfiles():
     display("Checking for old files...")
-    files = Popen('ls -all', shell=True, bufsize=64, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read().strip().decode('utf-8')
-    if ".img" in files:
+    files = str(glob.glob("*.img"))
+    files = files.replace("[", "").replace("'", "").replace("]", "").replace(",", "")
+    print(files)
+    if "boot.img" in files or "recovery.img" in files or "system.img" in files:
        display("Detected old files. Deleting them...")
-       call("rm boot.img && rm recovery.img && system.img", shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
+       call("rm boot.img && rm recovery.img && system.img && rm -rf system_out", shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
     else:
        display("There's no old files, continue...")
 
