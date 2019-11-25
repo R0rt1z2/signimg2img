@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, check_call, call
 import sys
 
-__version__ = '1.0'
+__version__ = '1.1'
 
 if sys.platform.startswith("linux"):
     print("")
@@ -16,42 +16,56 @@ else:
     print("Unsopported platform!")
     exit()
 
+def display(s):
+    text = "{sign2img-log} " + s
+    print(text)
+
+def check_header(image):
+    with open(image, "rb") as binary_file:
+       header = binary_file.read(8)
+       header = str(header)
+    if "BFBF" in header:
+       display("Detected BFBF header: " + header)
+    else:
+       display("This is not a signed image!!\n")
+       exit()
+
 def package():
-    print("Detecting if simg2img is installed...")
+    display("Detecting if simg2img is installed...")
     simg2img = Popen('apt list --installed | grep simg2img', shell=True, bufsize=64, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read().strip().decode('utf-8')
     if "simg2img" in simg2img:
-       print("simg2img is installed... Continue")
+       display("simg2img is installed... Continue")
     else:
-       print("simg2img is not installed, install it for use this tool!")
+       display("simg2img is not installed, install it for use this tool!")
        exit()
 
 def system():
     oldfiles()
     systemishere = Popen('ls | grep system-sign.img', shell=True, bufsize=64, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read().strip().decode('utf-8')
     if "system-sign.img" not in systemishere:
-      print("Cannot detect system-sign.img")
+      display("Cannot detect system-sign.img")
       exit()
     else:
-      print("Deleting magic header from system-sign.img...")
+      display("Deleting magic header from system-sign.img...")
       call("dd if=system-sign.img of=system.img bs=$((0x4040)) skip=1",shell=True)
-      print("Converting to ext4 image...")
+      display("Converting to ext4 image...")
       call("simg2img system.img system.ext4",shell=True)
-      print("Unpacking system image...")
+      display("Unpacking system image...")
       call("sudo mkdir system_out",shell=True)
       call("sudo mount -r -t ext4 -o loop system.ext4 /mnt",shell=True)
       call("sudo cp -r /mnt/* system_out",shell=True)
       call("sudo umount /mnt",shell=True)
       call("sudo chown -R $USER:$USER system_out",shell=True)
-      print("system-sign.img extracted at >>system_out<<")
+      display("system-sign.img extracted at >>system_out<<")
 
 def oldfiles():
-    print("Checking for old files...")
+    display("Checking for old files...")
     files = Popen('ls -all', shell=True, bufsize=64, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read().strip().decode('utf-8')
     if ".img" in files:
-       print("Detected old files. Deleting them...")
-       call("rm *.img", shell=True)
+       display("Detected old files. Deleting them...")
+       call("rm boot.img && rm recovery.img && system.img", shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
     else:
-       print("There's no old files, continue...")
+       display("There's no old files, continue...")
 
 def main():
     print('signimg2img binary - version: {}\n'.format(__version__))
@@ -63,22 +77,24 @@ def main():
     parser.add_argument("-r", "--recovery", action='store_true', dest='recoverysign', default=False,
                         help="Extract recovery-sign.img")
     args = parser.parse_args()
-
     if args.systemsign:
-      print("Selected: Unpack system-sign.img")
+      display("Selected: Unpack system-sign.img")
+      check_header("system-sign.img")
       system()
     elif args.bootsign:
-      print("Selected: Unpack boot-sign.img")
+      display("Selected: Unpack boot-sign.img")
+      check_header("boot-sign.img")
       oldfiles()
       call("dd if=boot-sign.img of=boot.img bs=$((0x4040)) skip=1", shell=True)
-      print("Done, image extracted as boot.img")
+      display("Done, image extracted as boot.img\n")
     elif args.recoverysign:
-      print("Selected: Unpack recovery-sign.img")
+      display("Selected: Unpack recovery-sign.img")
+      check_header("recovery-sign.img")
       oldfiles()
       call("dd if=recovery-sign.img of=recovery.img bs=$((0x4040)) skip=1", shell=True)
-      print("Done, image extracted as recovery.img")
+      display("Done, image extracted as recovery.img\n")
     else:
-      print("No option selected")
+      display("No option selected")
       exit()
 
 if __name__ == "__main__":
