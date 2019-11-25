@@ -57,13 +57,12 @@ def system():
       call("sudo cp -r /mnt/* system_out",shell=True)
       call("sudo umount /mnt",shell=True)
       call("sudo chown -R $USER:$USER system_out",shell=True)
-      display("system-sign.img extracted at >>system_out<\ns")
+      display("system-sign.img extracted at >>system_out<<\n")
 
 def oldfiles():
     display("Checking for old files...")
     files = str(glob.glob("*.img"))
     files = files.replace("[", "").replace("'", "").replace("]", "").replace(",", "")
-    print(files)
     if "boot.img" in files or "recovery.img" in files or "system.img" in files:
        display("Detected old files. Deleting them...")
        call("rm boot.img && rm recovery.img && system.img && rm -rf system_out", shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
