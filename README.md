@@ -16,7 +16,7 @@ How to unpack?
 =====================================
 * Copy the img to extract into the tool folder.
 * Open a terminal or cmd in the tool folder.
-* ```python3 signimg2img -s/-b/-r``` (Use -h to see help)
+* ```python3 signimg2img.py -s/-b/-r``` (Use -h to see help)
 
 Supported images:
 =====================================

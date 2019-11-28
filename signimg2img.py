@@ -1,35 +1,52 @@
 #!/usr/bin/env python3
 #====================================================#
-#              FILE: signimg2img                     #
+#              FILE: signimg2img.py                  #
 #              AUTHOR: R0rt1z2                       #
 #====================================================#
 
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, check_call, call
+from sys import version_info as __pyver__
 import sys
 import glob
+import time
 
 __version__ = '1.1'
+__pyver__ = str(__pyver__[0])
 
+# Check for platform
 if sys.platform.startswith("linux"):
     print("")
 else:
     print("Unsopported platform!")
     exit()
 
+# Check for python version
+if __pyver__[0] == "3":
+    time.sleep(0.1)
+else:
+    print(f'Invalid Python Version.. You need python 3.X to use this script. Your Version is: {__pyver__}\n')
+    exit()
+
 def display(s):
-    text = "{sign2img-log} " + s
+    text = f"[sign2img-log] {s}"
     print(text)
 
 def check_header(image):
-    with open(image, "rb") as binary_file:
-       header = binary_file.read(8)
-       header = str(header)
-    if "BFBF" in header:
-       display("Detected BFBF header: " + header)
+    images = str(glob.glob("*.img"))
+    images = images.replace("[", "").replace("'", "").replace("]", "").replace(",", "")
+    if image in images:
+      with open(image, "rb") as binary_file:
+         header = binary_file.read(8)
+         header = str(header)
+      if "BFBF" in header:
+         display(f"Detected BFBF header: {header}")
+      else:
+         display("This is not a signed image!!\n")
+         exit()
     else:
-       display("This is not a signed image!!\n")
-       exit()
+      display(f"Cannot find {image}!\n")
+      exit()
 
 def package():
     display("Detecting if simg2img is installed...")
@@ -37,16 +54,11 @@ def package():
     if "simg2img" in simg2img:
        display("simg2img is installed... Continue")
     else:
-       display("simg2img is not installed, install it for use this tool!")
+       display("simg2img is not installed, install it for unpack the system!\n")
        exit()
 
 def system():
-    oldfiles()
-    systemishere = Popen('ls | grep system-sign.img', shell=True, bufsize=64, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read().strip().decode('utf-8')
-    if "system-sign.img" not in systemishere:
-      display("Cannot detect system-sign.img")
-      exit()
-    else:
+      oldfiles()
       display("Deleting magic header from system-sign.img...")
       call("dd if=system-sign.img of=system.img bs=$((0x4040)) skip=1",shell=True)
       display("Converting to ext4 image...")
@@ -58,6 +70,7 @@ def system():
       call("sudo umount /mnt",shell=True)
       call("sudo chown -R $USER:$USER system_out",shell=True)
       display("system-sign.img extracted at >>system_out<<\n")
+      exit()
 
 def oldfiles():
     display("Checking for old files...")
@@ -96,7 +109,7 @@ def main():
       call("dd if=recovery-sign.img of=recovery.img bs=$((0x4040)) skip=1", shell=True)
       display("Done, image extracted as recovery.img\n")
     else:
-      display("No option selected")
+      display("No option selected\n")
       exit()
 
 if __name__ == "__main__":
