@@ -1,8 +1,27 @@
 #!/usr/bin/env python3
-#====================================================#
-#              FILE: signimg2img.py                  #
-#              AUTHOR: R0rt1z2                       #
-#====================================================#
+
+         #====================================================#
+         #              FILE: signimg2img.py                  #
+         #              AUTHOR: R0rt1z2                       #
+         #====================================================#
+
+#   Android signed images extractor. To use the script:
+#   "python3 signimg2img -b/-r/-s" (-flag depends on the image to unpack).
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+#   All copyrights of simg2img goes for anestisb.
 
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, check_call, call
@@ -10,7 +29,9 @@ from sys import version_info as __pyver__
 import sys
 import glob
 import time
+import os
 
+# Defines section
 __version__ = '1.1'
 __pyver__ = str(__pyver__[0])
 
@@ -31,6 +52,9 @@ else:
 def display(s):
     text = f"[sign2img-log] {s}"
     print(text)
+
+def shCommand(sh_command):
+    call(sh_command, shell=True)
 
 def check_header(image):
     images = str(glob.glob("*.img"))
@@ -60,15 +84,15 @@ def package():
 def system():
       oldfiles()
       display("Deleting magic header from system-sign.img...")
-      call("dd if=system-sign.img of=system.img bs=$((0x4040)) skip=1",shell=True)
+      shCommand("dd if=system-sign.img of=system.img bs=$((0x4040)) skip=1")
       display("Converting to ext4 image...")
-      call("simg2img system.img system.ext4",shell=True)
+      shCommand("simg2img system.img system.ext4")
       display("Unpacking system image...")
       os.mkdir("system_out")
-      call("sudo mount -r -t ext4 -o loop system.ext4 /mnt",shell=True)
-      call("sudo cp -r /mnt/* system_out",shell=True)
-      call("sudo umount /mnt",shell=True)
-      call("sudo chown -R $USER:$USER system_out",shell=True)
+      shCommand("sudo mount -r -t ext4 -o loop system.ext4 /mnt")
+      shCommand("sudo cp -r /mnt/* system_out")
+      shCommand("sudo umount /mnt")
+      shCommand("sudo chown -R $USER:$USER system_out")
       display("system-sign.img extracted at >>system_out<<\n")
       exit()
 
@@ -93,20 +117,20 @@ def main():
                         help="Extract recovery-sign.img")
     args = parser.parse_args()
     if args.systemsign:
-      display("Selected: Unpack system-sign.img")
+      display("Selected: Unpack recovery-sign.img")
       check_header("system-sign.img")
       system()
     elif args.bootsign:
-      display("Selected: Unpack boot-sign.img")
+      display("Selected Image to unpack: boot-sign.img")
       check_header("boot-sign.img")
       oldfiles()
-      call("dd if=boot-sign.img of=boot.img bs=$((0x4040)) skip=1", shell=True)
+      shCommand("dd if=boot-sign.img of=boot.img bs=$((0x4040)) skip=1")
       display("Done, image extracted as boot.img\n")
     elif args.recoverysign:
       display("Selected: Unpack recovery-sign.img")
       check_header("recovery-sign.img")
       oldfiles()
-      call("dd if=recovery-sign.img of=recovery.img bs=$((0x4040)) skip=1", shell=True)
+      shCommand("dd if=recovery-sign.img of=recovery.img bs=$((0x4040)) skip=1")
       display("Done, image extracted as recovery.img\n")
     else:
       display("No option selected\n")
