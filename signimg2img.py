@@ -110,7 +110,7 @@ def oldfiles():
     files = files.replace("[", "").replace("'", "").replace("]", "").replace(",", "")
     if "boot.img" in files or "recovery.img" in files or "system.img" in files:
        display("Detected old files. Deleting them...")
-       shCommand("rm boot.img && rm recovery.img && system.img && rm system.ext4 rm -rf system_out", "out")
+       shCommand("rm boot.img && rm recovery.img && system.img && rm system.ext4 && rm -rf system_out", "out")
     else:
        display("There's no old files, continue...")
 
