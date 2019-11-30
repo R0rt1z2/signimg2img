@@ -59,14 +59,20 @@ def shCommand(sh_command, stderr):
     else:
        call(sh_command, shell=True)
 
+# display and shCommand should be the first functions. If not, will cause errors.
+
+def grep_filetype(type):
+    typefiles = str(glob.glob(type))
+    typefiles = typefiles.replace("[", "").replace("'", "").replace("]", "").replace(",", "")
+    return typefiles # I don't really know if this is needed...
+
 def delete_header(image, outimage):
     display("Deleting the header...")
     time.sleep(0.5)
     shCommand(f'dd if={image} of={outimage} bs=$((0x4040)) skip=1', "out")
 
 def check_header(image):
-    images = str(glob.glob("*.img"))
-    images = images.replace("[", "").replace("'", "").replace("]", "").replace(",", "")
+    images = str(grep_filetype("*.img"))
     if image in images:
       with open(image, "rb") as binary_file:
          header = binary_file.read(8) # 8 first bytes are enough to check if the "BFBF" string is in there.
@@ -106,9 +112,8 @@ def system():
 
 def oldfiles():
     display("Checking for old files...")
-    files = str(glob.glob("*.img"))
-    files = files.replace("[", "").replace("'", "").replace("]", "").replace(",", "")
-    if "boot.img" in files or "recovery.img" in files or "system.img" in files:
+    old_files = str(grep_filetype("*.img")) # Extension of the files to check.
+    if "boot.img" in old_files or "recovery.img" in old_files or "system.img" in old_files:
        display("Detected old files. Deleting them...")
        shCommand("rm boot.img && rm recovery.img && system.img && rm system.ext4 rm -rf system_out", "out")
     else:
