@@ -26,6 +26,10 @@ Supported images:
 
 NOTE: If you try to unpack images that are not signed, the script will obviously fail..
 
+LICENSE:
+=====================================
+This program is licensed under the GNU General Public License. See LICENSE.md for details.
+
 Thanks to:
 =====================================
 * anestisb for his simg2img

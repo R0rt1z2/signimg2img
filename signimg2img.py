@@ -115,7 +115,7 @@ def oldfiles():
     old_files = str(grep_filetype("*.img")) # Extension of the files to check.
     if "boot.img" in old_files or "recovery.img" in old_files or "system.img" in old_files:
        display("Detected old files. Deleting them...")
-       shCommand("rm boot.img && rm recovery.img && system.img && rm system.ext4 rm -rf system_out", "out")
+       shCommand("rm boot.img && rm recovery.img && system.img && rm system.ext4 && rm -rf system_out", "out")
     else:
        display("There's no old files, continue...")
 
