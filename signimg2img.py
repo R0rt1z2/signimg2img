@@ -53,15 +53,23 @@ def display(s):
     text = f"[sign2img-log] {s}"
     print(text)
 
-def shCommand(sh_command):
-    call(sh_command, shell=True)
+def shCommand(sh_command, stderr):
+    if stderr == "out":
+       call(sh_command, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
+    else:
+       call(sh_command, shell=True)
+
+def delete_header(image, outimage):
+    display("Deleting the header...")
+    time.sleep(0.5)
+    shCommand(f'dd if={image} of={outimage} bs=$((0x4040)) skip=1', "out")
 
 def check_header(image):
     images = str(glob.glob("*.img"))
     images = images.replace("[", "").replace("'", "").replace("]", "").replace(",", "")
     if image in images:
       with open(image, "rb") as binary_file:
-         header = binary_file.read(8)
+         header = binary_file.read(8) # 8 first bytes are enough to check if the "BFBF" string is in there.
          header = str(header)
       if "BFBF" in header:
          display(f"Detected BFBF header: {header}")
@@ -84,15 +92,15 @@ def package():
 def system():
       oldfiles()
       display("Deleting magic header from system-sign.img...")
-      shCommand("dd if=system-sign.img of=system.img bs=$((0x4040)) skip=1")
+      delete_header("system-sign.img", "system.img" )
       display("Converting to ext4 image...")
-      shCommand("simg2img system.img system.ext4")
+      shCommand("simg2img system.img system.ext4", "out")
       display("Unpacking system image...")
       os.mkdir("system_out")
-      shCommand("sudo mount -r -t ext4 -o loop system.ext4 /mnt")
-      shCommand("sudo cp -r /mnt/* system_out")
-      shCommand("sudo umount /mnt")
-      shCommand("sudo chown -R $USER:$USER system_out")
+      shCommand("sudo mount -r -t ext4 -o loop system.ext4 /mnt", "noout")
+      shCommand("sudo cp -r /mnt/* system_out", "noout")
+      shCommand("sudo umount /mnt", "noout")
+      shCommand("sudo chown -R $USER:$USER system_out", "noout")
       display("system-sign.img extracted at >>system_out<<\n")
       exit()
 
@@ -102,7 +110,7 @@ def oldfiles():
     files = files.replace("[", "").replace("'", "").replace("]", "").replace(",", "")
     if "boot.img" in files or "recovery.img" in files or "system.img" in files:
        display("Detected old files. Deleting them...")
-       call("rm boot.img && rm recovery.img && system.img && rm -rf system_out", shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
+       shCommand("rm boot.img && rm recovery.img && system.img && rm system.ext4 rm -rf system_out", "out")
     else:
        display("There's no old files, continue...")
 
@@ -124,13 +132,13 @@ def main():
       display("Selected Image to unpack: boot-sign.img")
       check_header("boot-sign.img")
       oldfiles()
-      shCommand("dd if=boot-sign.img of=boot.img bs=$((0x4040)) skip=1")
+      delete_header("boot-sign.img", "boot.img")
       display("Done, image extracted as boot.img\n")
     elif args.recoverysign:
       display("Selected: Unpack recovery-sign.img")
       check_header("recovery-sign.img")
       oldfiles()
-      shCommand("dd if=recovery-sign.img of=recovery.img bs=$((0x4040)) skip=1")
+      delete_header("recovery-sign.img", "recovery.img")
       display("Done, image extracted as recovery.img\n")
     else:
       display("No option selected\n")
