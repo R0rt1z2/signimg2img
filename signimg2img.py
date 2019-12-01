@@ -97,7 +97,6 @@ def package():
 
 def system():
       oldfiles()
-      display("Deleting magic header from system-sign.img...")
       delete_header("system-sign.img", "system.img" )
       display("Converting to ext4 image...")
       shCommand("simg2img system.img system.ext4", "out")
@@ -130,7 +129,7 @@ def main():
                         help="Extract recovery-sign.img")
     args = parser.parse_args()
     if args.systemsign:
-      display("Selected: Unpack recovery-sign.img")
+      display("Selected: Unpack system-sign.img")
       check_header("system-sign.img")
       system()
     elif args.bootsign:
