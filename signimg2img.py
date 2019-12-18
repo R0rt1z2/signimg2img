@@ -87,7 +87,7 @@ def check_header(image):
       exit()
 
 def package():
-    display("Detecting if simg2img is installed...")
+    display("Checking if simg2img is installed...")
     simg2img = Popen('apt list --installed | grep simg2img', shell=True, bufsize=64, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read().strip().decode('utf-8')
     if "simg2img" in simg2img:
        display("simg2img is installed... Continue")
