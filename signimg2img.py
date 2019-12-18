@@ -86,7 +86,7 @@ def check_header(image):
       display(f"Cannot find {image}!\n")
       exit()
 
-def package():
+def check_simg2img():
     display("Checking if simg2img is installed...")
     simg2img = Popen('apt list --installed | grep simg2img', shell=True, bufsize=64, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read().strip().decode('utf-8')
     if "simg2img" in simg2img:
@@ -95,7 +95,8 @@ def package():
        display("simg2img is not installed, install it for unpack the system!\n")
        exit()
 
-def system():
+def unpack_system():
+      check_simg2img()
       oldfiles()
       delete_header("system-sign.img", "system.img" )
       display("Converting to ext4 image...")
@@ -131,7 +132,7 @@ def main():
     if args.systemsign:
       display("Selected: Unpack system-sign.img")
       check_header("system-sign.img")
-      system()
+      unpack_system()
     elif args.bootsign:
       display("Selected Image to unpack: boot-sign.img")
       check_header("boot-sign.img")
