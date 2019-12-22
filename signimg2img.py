@@ -6,7 +6,7 @@
          #====================================================#
 
 #   Android signed images extractor. To use the script:
-#   "python3 signimg2img -b/-r/-s" (-flag depends on the image to unpack).
+#   "python3 signimg2img -b/-r/-s" or -i image_name to unpack any other image.
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ import time
 import os
 
 # Defines section
-__version__ = '1.1'
+__version__ = '1.2'
 __pyver__ = str(__pyver__[0])
 
 # Check for platform
@@ -50,7 +50,7 @@ else:
     exit()
 
 def display(s):
-    text = f"[sign2img-log] {s}"
+    text = f"[signimg2img-log] {s}"
     print(text)
 
 def shCommand(sh_command, stderr):
@@ -71,8 +71,11 @@ def delete_header(image, outimage):
     time.sleep(0.5)
     shCommand(f'dd if={image} of={outimage} bs=$((0x4040)) skip=1', "out")
 
-def check_header(image):
-    images = str(grep_filetype("*.img"))
+def check_header(image, ext):
+    if ext == "img":
+        images = str(grep_filetype("*.img"))
+    elif ext == "bin":
+        images = str(grep_filetype("*.bin"))
     if image in images:
       with open(image, "rb") as binary_file:
          header = binary_file.read(8) # 8 first bytes are enough to check if the "BFBF" string is in there.
@@ -111,42 +114,56 @@ def unpack_system():
       exit()
 
 def oldfiles():
-    display("Checking for old files...")
-    old_files = str(grep_filetype("*.img")) # Extension of the files to check.
-    if "boot.img" in old_files or "recovery.img" in old_files or "system.img" in old_files:
-       display("Detected old files. Deleting them...")
-       shCommand("rm boot.img && rm recovery.img && system.img && rm system.ext4 && rm -rf system_out", "out")
-    else:
-       display("There's no old files, continue...")
+       display("Removing old files if they're present...")
+       shCommand("rm boot.img && rm recovery.img && system.img && rm system.ext4 && rm -rf system_out && rm *.unpack", "out")
+
+def help():
+         display("USAGE: signimg2img.py -b/-r/-s (To unpack any other image: -i image_name):\n")
+         print("     -b: Convert Android Signed Boot Image.")
+         print("     -r: Convert Android Signed Recovery Image.")
+         print("     -s: Convert & extract Android Signed System Image.")
+         print("     -i: Convert any other image (i.e: cache-sign, lk-sign, etc).")
+         print("")
+         exit()
 
 def main():
     print('signimg2img binary - version: {}\n'.format(__version__))
-    parser = ArgumentParser()
-    parser.add_argument("-s", "--system", action='store_true', dest='systemsign', default=False,
-                        help="Extract system-sign.img")
-    parser.add_argument("-b", "--boot", action='store_true', dest='bootsign', default=False,
-                        help="Extract boot-sign.img")
-    parser.add_argument("-r", "--recovery", action='store_true', dest='recoverysign', default=False,
-                        help="Extract recovery-sign.img")
-    args = parser.parse_args()
-    if args.systemsign:
+    if len(sys.argv) == 1:
+         display("Expected more arguments.\n")
+         help()
+         exit()
+    elif sys.argv[1] == "-h":
+         help()      
+    elif sys.argv[1] == "-s":
       display("Selected: Unpack system-sign.img")
-      check_header("system-sign.img")
+      check_header("system-sign.img", "img")
       unpack_system()
-    elif args.bootsign:
+    elif sys.argv[1] == "-b":
       display("Selected Image to unpack: boot-sign.img")
-      check_header("boot-sign.img")
+      check_header("boot-sign.img", "img")
       oldfiles()
       delete_header("boot-sign.img", "boot.img")
       display("Done, image extracted as boot.img\n")
-    elif args.recoverysign:
+    elif sys.argv[1] == "-r":
       display("Selected: Unpack recovery-sign.img")
-      check_header("recovery-sign.img")
+      check_header("recovery-sign.img", "img")
       oldfiles()
       delete_header("recovery-sign.img", "recovery.img")
       display("Done, image extracted as recovery.img\n")
+    elif sys.argv[1] == "-i":
+      image = sys.argv[2]
+      display(f"Selected: Unpack {image}")
+      if "bin" in sys.argv[2]:
+         imgis = "bin"
+      elif "img" in sys.argv[2]:
+         imgis = "img"
+      check_header(sys.argv[2], imgis)
+      oldfiles()
+      delete_header(f"{image}", f"{image}.unpack")
+      display(f"Done, image extracted as {image}.unpack\n")
     else:
-      display("No option selected\n")
+      display(f"Invalid option: {sys.argv[1]}\n")
+      help()
       exit()
 
 if __name__ == "__main__":
