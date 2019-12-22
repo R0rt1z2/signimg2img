@@ -19,17 +19,15 @@ How to unpack?
 * ```python3 signimg2img.py -s/-b/-r``` or -i image_name (Replace image_name with your image name) to unpack other image types.
 
 Example of output:
-```$ python3 signimg2img.py -i lk-sign.bin
-
+```python3 signimg2img.py -i lk-sign.bin
 signimg2img binary - version: 1.2
 
-{signimg2img-log} Selected: Unpack lk-sign.bin
-{signimg2img-log} Detected BFBF header: b'BFBF\x02\x00\x00\x00'
-{signimg2img-log} Removing old files if they're present...
-{signimg2img-log} Deleting the header...
-{signimg2img-log} Done, image extracted as lk-sign.bin.unpack
-
-$```
+[signimg2img-log] Selected: Unpack lk-sign.bin
+[signimg2img-log] Detected BFBF header: b'BFBF\x02\x00\x00\x00'
+[signimg2img-log] Removing old files if they're present...
+[signimg2img-log] Deleting the header...
+[signimg2img-log] Done, image extracted as lk-sign.bin.unpack
+```
 
 Supported images:
 =====================================
