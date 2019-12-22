@@ -1,0 +1,8 @@
+# bin images
+*.bin
+
+# raw images
+*.img
+
+# unpacked images
+*.unpack
