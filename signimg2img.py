@@ -26,6 +26,7 @@
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, check_call, call
 from sys import version_info as __pyver__
+import struct
 import sys
 import glob
 import time
@@ -34,6 +35,8 @@ import os
 # Defines section
 __version__ = '1.2'
 __pyver__ = str(__pyver__[0])
+
+BFBF_HDR = 1178748482
 
 # Check for platform
 if sys.platform.startswith("linux"):
@@ -78,9 +81,9 @@ def check_header(image, ext):
         images = str(grep_filetype("*.bin"))
     if image in images:
       with open(image, "rb") as binary_file:
-         header = binary_file.read(8) # 8 first bytes are enough to check if the "BFBF" string is in there.
-         header = str(header)
-      if "BFBF" in header:
+         data = binary_file.read(4)
+         img_hdr = struct.unpack('<I', data)
+      if img_hdr == BFBF_HDR
          display(f"Detected BFBF header: {header}")
       else:
          display("This is not a signed image!!\n")
