@@ -37,6 +37,7 @@ Supported images:
 * Any other image (i.e: cache-sign.img) (Use for example -i cache-sign.img)
 
 NOTE: If you try to unpack images that are not signed, the script will obviously fail..
+
 NOTE: If you try to unpack a signed image with "SSSS" header the tool will fail. Basically, I'm still working on that header...
 
 LICENSE:
