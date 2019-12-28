@@ -36,7 +36,9 @@ import os
 __version__ = '1.2'
 __pyver__ = str(__pyver__[0])
 
+# Headers
 BFBF_HDR = 1178748482
+SSSS_HDR = 1397969747
 
 # Check for platform
 if sys.platform.startswith("linux"):
@@ -82,9 +84,13 @@ def check_header(image, ext):
     if image in images:
       with open(image, "rb") as binary_file:
          data = binary_file.read(4)
-         img_hdr = struct.unpack('<I', data)
-      if img_hdr == BFBF_HDR
-         display(f"Detected BFBF header: {header}")
+         img_hdr, = struct.unpack('<I', data)
+      if img_hdr == BFBF_HDR:
+         display(f"Detected BFBF header: {img_hdr}")
+      elif img_hdr == SSSS_HDR:
+         display(f"Detected SSSS header: {img_hdr}!")
+         display("This header is not actually supported!\n")
+         exit()
       else:
          display("This is not a signed image!!\n")
          exit()
