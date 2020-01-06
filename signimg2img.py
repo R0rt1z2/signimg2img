@@ -23,7 +23,6 @@
 #
 #   All copyrights of simg2img goes for anestisb.
 
-from argparse import ArgumentParser
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, check_call, call
 from sys import version_info as __pyver__
 import struct
