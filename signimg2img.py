@@ -23,7 +23,7 @@
 #
 #   All copyrights of simg2img goes for anestisb.
 
-from subprocess import Popen, PIPE, DEVNULL, STDOUT, check_call, call
+from subprocess import *
 from sys import version_info as __pyver__
 import struct
 import sys
@@ -114,19 +114,9 @@ def check_header(image, ext):
          exit()
     else:
       display(f"Cannot find {image}!\n")
-      exit()
-
-def check_simg2img():
-    display("Checking if simg2img is installed...")
-    simg2img = Popen('apt list --installed | grep simg2img', shell=True, bufsize=64, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True).stdout.read().strip().decode('utf-8')
-    if "simg2img" in simg2img:
-       display("simg2img is installed... Continue")
-    else:
-       display("simg2img is not installed, install it for unpack the system!\n")
-       exit()
+      exit()    
 
 def unpack_system(header):
-      check_simg2img()
       oldfiles()
       if header == "BFBF":
           delete_header("system-sign.img", "system.img", header, 0)
@@ -136,7 +126,9 @@ def unpack_system(header):
           display(f'Got {offset} as offset!')
           delete_header("system-sign.img", "system.img", header, offset)
       display("Converting to ext4 image...")
-      shCommand("simg2img system.img system.ext4", "out")
+      p = Popen("simg2img system.img system.ext4", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+      if(len(p.stderr.read()) != 0):
+        sys.exit("simg2img is not installed!")
       display("Unpacking system image...")
       os.mkdir("system_out")
       shCommand("sudo mount -r -t ext4 -o loop system.ext4 /mnt", "noout")
