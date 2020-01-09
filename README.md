@@ -67,4 +67,4 @@ This program is licensed under the GNU General Public License. See LICENSE.md fo
 Thanks to:
 =====================================
 * anestisb for his simg2img.
-* carlitos900 for the help with the SSSS header.
+* carlitos900 and kjones for the help with the SSSS header.
