@@ -32,7 +32,7 @@ import time
 import os
 
 # Defines section
-__version__ = '1.2'
+__version__ = '1.3'
 __pyver__ = str(__pyver__[0])
 
 # Headers
@@ -65,15 +65,33 @@ def shCommand(sh_command, stderr):
 
 # display and shCommand should be the first functions. If not, will cause errors.
 
+def get_offset(image):
+    # Thanks to carlitos900 for the shell method.
+    # This is the "pythonic" method.
+    # This is for little endian arch.
+    image = open(image, 'rb')
+    image.read(60) # Header
+    offset, = struct.unpack('<I', image.read(4)) # SSSS 4 bytes ---> <I
+    return offset
+    
 def grep_filetype(type):
     typefiles = str(glob.glob(type))
     typefiles = typefiles.replace("[", "").replace("'", "").replace("]", "").replace(",", "")
-    return typefiles # I don't really know if this is needed...
+    return typefiles
 
-def delete_header(image, outimage):
+def delete_header(image, outimage, hdr_type, offset): # If there's no need of offset (i.e: "BFBF" use "0")
     display("Deleting the header...")
-    time.sleep(0.5)
-    shCommand(f'dd if={image} of={outimage} bs=$((0x4040)) skip=1', "out")
+    if hdr_type == "BFBF":
+       time.sleep(0.5)
+       shCommand(f'dd if={image} of={outimage} bs=$((0x4040)) skip=1', "out")
+    elif hdr_type == "SSSS":
+       display("Start the 1st Stage...")
+       shCommand(f'dd if={image} of=system.tmp bs=64 skip=1', "out")
+       display("Start the 2nd Stage...")
+       shCommand(f'dd if=system.tmp of=system.img iflag=count_bytes bs=8192 count={offset}', "out")
+       display("Header remove complete!")
+    else:
+       display("Invalid header type...\n")
 
 def check_header(image, ext):
     if ext == "img":
@@ -83,13 +101,14 @@ def check_header(image, ext):
     if image in images:
       with open(image, "rb") as binary_file:
          data = binary_file.read(4)
-         img_hdr, = struct.unpack('<I', data)
+         img_hdr, = struct.unpack('<I', data) # 4 bytes ---> <I
+      global header # Define here the header variable, otherwise will fail.
       if img_hdr == BFBF_HDR:
-         display(f"Detected BFBF header: {img_hdr}")
+         display(f"Header is BFBF: {img_hdr}")
+         header = "BFBF"
       elif img_hdr == SSSS_HDR:
-         display(f"Detected SSSS header: {img_hdr}!")
-         display("This header is not actually supported!\n")
-         exit()
+         display(f"Header is SSSS: {img_hdr}")
+         header = "SSSS"
       else:
          display("This is not a signed image!!\n")
          exit()
@@ -106,10 +125,16 @@ def check_simg2img():
        display("simg2img is not installed, install it for unpack the system!\n")
        exit()
 
-def unpack_system():
+def unpack_system(header):
       check_simg2img()
       oldfiles()
-      delete_header("system-sign.img", "system.img" )
+      if header == "BFBF":
+          delete_header("system-sign.img", "system.img", header, 0)
+      elif header == "SSSS":
+          display("Getting the offset...")
+          offset = get_offset("system-sign.img")
+          display(f'Got {offset} as offset!')
+          delete_header("system-sign.img", "system.img", header, offset)
       display("Converting to ext4 image...")
       shCommand("simg2img system.img system.ext4", "out")
       display("Unpacking system image...")
@@ -123,14 +148,18 @@ def unpack_system():
 
 def oldfiles():
        display("Removing old files if they're present...")
-       shCommand("rm boot.img && rm recovery.img && system.img && rm system.ext4 && rm -rf system_out && rm *.unpack", "out")
+       shCommand("rm boot.img && rm recovery.img && system.img && rm system.ext4 && rm -rf system_out && rm *.unpack && rm *.tmp", "out")
+       if os.path.exists("system_out"):
+           shCommand("mv system_out system_out_old", "out")
 
 def help():
-         display("USAGE: signimg2img.py -b/-r/-s (To unpack any other image: -i image_name):\n")
+         display("USAGE: signimg2img.py -option:\n")
          print("     -b: Convert Android Signed Boot Image.")
          print("     -r: Convert Android Signed Recovery Image.")
          print("     -s: Convert & extract Android Signed System Image.")
          print("     -i: Convert any other image (i.e: cache-sign, lk-sign, etc).")
+         print("     -o: Get image info (-o image_name).")
+         print("     -c: Full cleanup (removes all!)")
          print("")
          exit()
 
@@ -145,19 +174,37 @@ def main():
     elif sys.argv[1] == "-s":
       display("Selected: Unpack system-sign.img")
       check_header("system-sign.img", "img")
-      unpack_system()
+      unpack_system(header)
     elif sys.argv[1] == "-b":
       display("Selected Image to unpack: boot-sign.img")
       check_header("boot-sign.img", "img")
       oldfiles()
-      delete_header("boot-sign.img", "boot.img")
+      delete_header("boot-sign.img", "boot.img", header, 0)
       display("Done, image extracted as boot.img\n")
     elif sys.argv[1] == "-r":
       display("Selected: Unpack recovery-sign.img")
       check_header("recovery-sign.img", "img")
       oldfiles()
-      delete_header("recovery-sign.img", "recovery.img")
+      delete_header("recovery-sign.img", "recovery.img", header, 0)
       display("Done, image extracted as recovery.img\n")
+    elif sys.argv[1] == "-o":
+      image = sys.argv[2]
+      if "bin" in sys.argv[2]:
+         imgis = "bin"
+      elif "img" in sys.argv[2]:
+         imgis = "img"
+      check_header(image, imgis)
+      if header is "SSSS":
+          offset = get_offset(image)
+          display(f'Offset: {offset}')
+      img_size = os.path.getsize(image)
+      display(f'Size: {img_size} bytes')
+      if header is "BFBF" or "SSSS":
+         unpack = "yes"
+      else:
+         unpack = "no"
+      display(f'Image can be unpacked: {unpack}\n')
+      exit()
     elif sys.argv[1] == "-i":
       image = sys.argv[2]
       display(f"Selected: Unpack {image}")
@@ -167,8 +214,17 @@ def main():
          imgis = "img"
       check_header(sys.argv[2], imgis)
       oldfiles()
-      delete_header(f"{image}", f"{image}.unpack")
+      delete_header(f"{image}", f"{image}.unpack", header, 0)
       display(f"Done, image extracted as {image}.unpack\n")
+    elif sys.argv[1] == "-c":
+       # TODO: Implement a cleaner way to remove all files (i.e: Using glob.glob).
+       shCommand("rm *.img && rm *.ext4 && rm *.unpack && rm system.tmp", "out")
+       shCommand("rm system.tmp", "out")
+       if os.path.exists("system_out"):
+           shCommand("rm -rf system_out", "out")
+       if os.path.exists("system_out_old"):
+           shCommand("rm -rf system_out_old", "out")
+       display("Cleaned up!\n")    
     else:
       display(f"Invalid option: {sys.argv[1]}\n")
       help()
