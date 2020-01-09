@@ -19,7 +19,8 @@ How to unpack?
 * ```python3 signimg2img.py -option```
 
 Example of system-sign (SSSS) unpack output:
-```sudo python3 signimg2img.py -s
+```
+sudo python3 signimg2img.py -s
 
 signimg2img binary - version: 1.3
 
@@ -66,4 +67,4 @@ This program is licensed under the GNU General Public License. See LICENSE.md fo
 Thanks to:
 =====================================
 * anestisb for his simg2img.
-* carlitos900 for the help with the SSSS header.
+* carlitos900 and kjones for the help with the SSSS header.
