@@ -85,10 +85,7 @@ def delete_header(image, outimage, hdr_type, offset): # If there's no need of of
        time.sleep(0.5)
        shCommand(f'dd if={image} of={outimage} bs=$((0x4040)) skip=1', "out")
     elif hdr_type == "SSSS":
-       display("Start the 1st Stage...")
-       shCommand(f'dd if={image} of=system.tmp bs=64 skip=1', "out")
-       display("Start the 2nd Stage...")
-       shCommand(f'dd if=system.tmp of=system.img iflag=count_bytes bs=8192 count={offset}', "out")
+       shCommand(f'dd if=system-sign.img of=system.img iflag=count_bytes,skip_bytes bs=8192 skip=64 count={offset}', "out")
        display("Header remove complete!")
     else:
        display("Invalid header type...\n")
