@@ -29,6 +29,7 @@ import struct
 import sys
 import glob
 import time
+import shutil
 import os
 
 # Defines section
@@ -88,7 +89,7 @@ def delete_header(image, outimage, hdr_type, offset): # If there's no need of of
        shCommand(f'dd if=system-sign.img of=system.img iflag=count_bytes,skip_bytes bs=8192 skip=64 count={offset}', "out")
        display("Header remove complete!")
     else:
-       display("Invalid header type...\n")
+       raise Exception("Must be SSSS or BFBF not {}".format(hdr_type))
 
 def check_header(image, ext):
     if ext == "img":
@@ -210,9 +211,9 @@ def main():
        shCommand("rm *.img && rm *.ext4 && rm *.unpack && rm system.tmp", "out")
        shCommand("rm system.tmp", "out")
        if os.path.exists("system_out"):
-           shCommand("rm -rf system_out", "out")
+           shutil.rmtree("system_out")
        if os.path.exists("system_out_old"):
-           shCommand("rm -rf system_out_old", "out")
+           shutil.rmtree("system_out_old")
        display("Cleaned up!\n")    
     else:
       display(f"Invalid option: {sys.argv[1]}\n")
