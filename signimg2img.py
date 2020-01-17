@@ -35,9 +35,10 @@ import os
 __version__ = '1.3'
 __pyver__ = str(__pyver__[0])
 
-# Headers
+# Defines
 BFBF_HDR = 1178748482
 SSSS_HDR = 1397969747
+str_start_addr = 0x000010 # 16 bytes after the BFBF header
 
 # Check for platform
 if sys.platform.startswith("linux"):
@@ -99,10 +100,14 @@ def check_header(image, ext):
       with open(image, "rb") as binary_file:
          data = binary_file.read(4)
          img_hdr, = struct.unpack('<I', data) # 4 bytes ---> <I
-      global header # Define here the header variable, otherwise will fail.
+         binary_file.seek(str_start_addr) # Go to the string offset.
+         img_string = (binary_file.read(8)).decode("utf-8") # Read the string offset
+         global header # Define here the header variable, otherwise will fail.
       if img_hdr == BFBF_HDR:
          display(f"Header is BFBF: {img_hdr}")
+         display(f"Found {img_string} at {str_start_addr}")
          header = "BFBF"
+         return
       elif img_hdr == SSSS_HDR:
          display(f"Header is SSSS: {img_hdr}")
          header = "SSSS"
@@ -186,8 +191,9 @@ def main():
       if header is "SSSS":
           offset = get_offset(image)
           display(f'Offset: {offset}')
-      img_size = os.path.getsize(image)
-      display(f'Size: {img_size} bytes')
+      with open(image, "rb") as fin:
+        data = len(fin.read())
+      display(f'Size: {data} bytes')
       if header is "BFBF" or "SSSS":
          unpack = "yes"
       else:
