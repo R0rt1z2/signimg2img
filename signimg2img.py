@@ -29,6 +29,7 @@ import struct
 import sys
 import glob
 import time
+import shutil
 import os
 
 # Defines section
@@ -47,7 +48,7 @@ else:
     print("Unsopported platform!")
     exit()
 
-# Check for python version
+# Check for python ver
 if __pyver__[0] == "3":
     time.sleep(0.1)
 else:
@@ -84,12 +85,12 @@ def delete_header(image, outimage, hdr_type, offset): # If there's no need of of
     display("Deleting the header...")
     if hdr_type == "BFBF":
        time.sleep(0.5)
-       shCommand(f'dd if={image} of={outimage} bs=$((0x4040)) skip=1', "out")
+       shCommand(f'dd if={image} of={outimage} bs=$((0x4040)) skip=1', "out") # dd command to delete "BFBF" header.
     elif hdr_type == "SSSS":
-       shCommand(f'dd if=system-sign.img of=system.img iflag=count_bytes,skip_bytes bs=8192 skip=64 count={offset}', "out")
+       shCommand(f'dd if=system-sign.img of=system.img iflag=count_bytes,skip_bytes bs=8192 skip=64 count={offset}', "out") # dd command to delete "SSSS" header. Needs defined offset.
        display("Header remove complete!")
     else:
-       display("Invalid header type...\n")
+       raise Exception("Must be SSSS or BFBF not {}".format(hdr_type))
 
 def check_header(image, ext):
     if ext == "img":
@@ -98,7 +99,7 @@ def check_header(image, ext):
         images = str(grep_filetype("*.bin"))
     if image in images:
       with open(image, "rb") as binary_file:
-         data = binary_file.read(4)
+         data = binary_file.read(4) # First 4 bytes show header string.
          img_hdr, = struct.unpack('<I', data) # 4 bytes ---> <I
          binary_file.seek(str_start_addr) # Go to the string offset.
          img_string = (binary_file.read(8)).decode("utf-8") # Read the string offset
@@ -216,9 +217,9 @@ def main():
        shCommand("rm *.img && rm *.ext4 && rm *.unpack && rm system.tmp", "out")
        shCommand("rm system.tmp", "out")
        if os.path.exists("system_out"):
-           shCommand("rm -rf system_out", "out")
+           shutil.rmtree("system_out")
        if os.path.exists("system_out_old"):
-           shCommand("rm -rf system_out_old", "out")
+           shutil.rmtree("system_out_old")
        display("Cleaned up!\n")    
     else:
       display(f"Invalid option: {sys.argv[1]}\n")
