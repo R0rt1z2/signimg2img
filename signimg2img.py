@@ -214,8 +214,7 @@ def main():
       display(f"Done, image extracted as {image}.unpack\n")
     elif sys.argv[1] == "-c":
        # TODO: Implement a cleaner way to remove all files (i.e: Using glob.glob).
-       shCommand("rm *.img && rm *.ext4 && rm *.unpack && rm system.tmp", "out")
-       shCommand("rm system.tmp", "out")
+       shCommand("rm *.img && rm *.ext4 && rm *.unpack", "out")
        if os.path.exists("system_out"):
            shutil.rmtree("system_out")
        if os.path.exists("system_out_old"):
