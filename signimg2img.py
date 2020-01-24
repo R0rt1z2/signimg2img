@@ -56,7 +56,7 @@ else:
     exit()
 
 def display(s):
-    text = f"[signimg2img-log] {s}"
+    text = "[signimg2img-log] {}".format(s)
     print(text)
 
 def shCommand(sh_command, stderr):
