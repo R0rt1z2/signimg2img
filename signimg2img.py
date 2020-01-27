@@ -42,7 +42,7 @@ SSSS_HDR = 1397969747
 str_start_addr = 0x000010 # 16 bytes after the BFBF header
 
 # Check for platform
-if sys.platform.startswith("linux"):
+if sys.platform.startswith("linux") or ("win"):
     print("")
 else:
     print("Unsopported platform!")
