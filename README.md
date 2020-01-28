@@ -20,24 +20,22 @@ How to unpack?
 
 Example of system-sign (SSSS) unpack output:
 ```
-sudo python3 signimg2img.py -s
+r0rtiz2@r0rtiz2:~/signimg2img$ python3 signimg2img.py -s
 
 signimg2img binary - version: 1.3
 
 [signimg2img-log] Selected: Unpack system-sign.img
 [signimg2img-log] Header is SSSS: 1397969747
-[signimg2img-log] Checking if simg2img is installed...
-[signimg2img-log] simg2img is installed... Continue
 [signimg2img-log] Removing old files if they're present...
 [signimg2img-log] Getting the offset...
 [signimg2img-log] Got 1885696592 as offset!
 [signimg2img-log] Deleting the header...
-[signimg2img-log] Start the 1st Stage...
-[signimg2img-log] Start the 2nd Stage...
 [signimg2img-log] Header remove complete!
 [signimg2img-log] Converting to ext4 image...
 [signimg2img-log] Unpacking system image...
 [signimg2img-log] system-sign.img extracted at >>system_out<<
+
+r0rtiz2@r0rtiz2:~/signimg2img$ 
 ```
 
 Supported headers:
