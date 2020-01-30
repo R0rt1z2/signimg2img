@@ -37,8 +37,11 @@ __version__ = '1.3'
 __pyver__ = str(__pyver__[0])
 
 # Defines
-BFBF_HDR = 1178748482
-SSSS_HDR = 1397969747
+SRC_HEADERS = [
+	1178748482,\ #BFBF
+	1397969747 #SSSS
+]
+
 str_start_addr = 0x000010 # 16 bytes after the BFBF header
 
 # Check for platform
@@ -104,12 +107,12 @@ def check_header(image, ext):
          binary_file.seek(str_start_addr) # Go to the string offset.
          img_string = (binary_file.read(8)).decode("utf-8") # Read the string offset
          global header # Define here the header variable, otherwise will fail.
-      if img_hdr == BFBF_HDR:
+      if img_hdr == SRC_HEADERS[0]:
          display(f"Header is BFBF: {img_hdr}")
          display(f"Found {img_string} at {str_start_addr}")
          header = "BFBF"
          return
-      elif img_hdr == SSSS_HDR:
+      elif img_hdr == SRC_HEADERS[1]:
          display(f"Header is SSSS: {img_hdr}")
          header = "SSSS"
       else:
