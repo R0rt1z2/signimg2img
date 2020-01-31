@@ -80,7 +80,7 @@ def get_offset(image):
     return offset
     
 def grep_filetype(type):
-    typefiles = str(glob.glob(type))
+    typefiles = str(glob.glob("*.{}".format(type)))
     typefiles = typefiles.replace("[", "").replace("'", "").replace("]", "").replace(",", "")
     return typefiles
 
@@ -97,9 +97,9 @@ def delete_header(image, outimage, hdr_type, offset): # If there's no need of of
 
 def check_header(image, ext):
     if ext == "img":
-        images = str(grep_filetype("*.img"))
+        images = str(grep_filetype("img"))
     elif ext == "bin":
-        images = str(grep_filetype("*.bin"))
+        images = str(grep_filetype("bin"))
     if image in images:
       with open(image, "rb") as binary_file:
          data = binary_file.read(4) # First 4 bytes show header string.
