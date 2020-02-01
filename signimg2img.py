@@ -38,8 +38,8 @@ __pyver__ = str(__pyver__[0])
 
 # Defines
 SRC_HEADERS = [
-	1178748482,\ #BFBF
-	1397969747 #SSSS
+	1178748482,\
+        1397969747
 ]
 
 str_start_addr = 0x000010 # 16 bytes after the BFBF header
@@ -88,7 +88,9 @@ def delete_header(image, outimage, hdr_type, offset): # If there's no need of of
     display("Deleting the header...")
     if hdr_type == "BFBF":
        time.sleep(0.5)
-       shCommand(f'dd if={image} of={outimage} bs=$((0x4040)) skip=1', "out") # dd command to delete "BFBF" header.
+       with open(image, 'rb') as in_file:
+          with open(outimage, 'wb') as out_file:
+            out_file.write(in_file.read()[16448:])
     elif hdr_type == "SSSS":
        shCommand(f'dd if=system-sign.img of=system.img iflag=count_bytes,skip_bytes bs=8192 skip=64 count={offset}', "out") # dd command to delete "SSSS" header. Needs defined offset.
        display("Header remove complete!")
