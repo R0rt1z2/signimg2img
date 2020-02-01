@@ -123,7 +123,7 @@ def check_header(image, ext):
          display("This is not a signed image!!\n")
          exit()
     else:
-      display(f"Cannot find {image}!\n")
+      raise RuntimeError("Cannot find {}. Is it in the correct path?".format(image))
       exit()    
 
 def unpack_system(header):
@@ -138,7 +138,7 @@ def unpack_system(header):
       display("Converting to ext4 image...")
       p = Popen("simg2img system.img system.ext4", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
       if(len(p.stderr.read()) != 0):
-        sys.exit("simg2img is not installed!")
+        raise RuntimeError("simg2img is not installed!")
       display("Unpacking system image...")
       os.mkdir("system_out")
       shCommand("sudo mount -r -t ext4 -o loop system.ext4 /mnt", "noout")
@@ -228,7 +228,7 @@ def main():
            shutil.rmtree("system_out_old")
        display("Cleaned up!\n")    
     else:
-      display(f"Invalid option: {sys.argv[1]}\n")
+      display("Invalid option: {}\n".format(sys.argv[1]))
       help()
       exit()
 
