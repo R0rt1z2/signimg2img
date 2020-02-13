@@ -42,6 +42,8 @@ SRC_HEADERS = [
         1397969747
 ]
 
+BFBF_SIZE = 16448
+
 str_start_addr = 0x000010 # 16 bytes after the BFBF header
 
 # Check for platform
@@ -90,7 +92,7 @@ def delete_header(image, outimage, hdr_type, offset): # If there's no need of of
        time.sleep(0.5)
        with open(image, 'rb') as in_file:
           with open(outimage, 'wb') as out_file:
-            out_file.write(in_file.read()[16448:])
+            out_file.write(in_file.read()[BFBF_SIZE:])
     elif hdr_type == "SSSS":
        if sys.platform.startswith("win"):
           raise RuntimeError("Windows cannot unpack SSSS header!")
