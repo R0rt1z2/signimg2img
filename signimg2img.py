@@ -86,6 +86,11 @@ def grep_filetype(type):
     typefiles = typefiles.replace("[", "").replace("'", "").replace("]", "").replace(",", "")
     return typefiles
 
+def remove_files(files):
+    cmd = files.replace(" ", " & rm ")
+    cmd = " ".join(("rm", cmd))
+    shCommand(cmd, "out")
+
 def delete_header(image, outimage, hdr_type, offset): # If there's no need of offset (i.e: "BFBF" use "0")
     display("Deleting the header...")
     if hdr_type == "BFBF":
@@ -222,8 +227,12 @@ def main():
       delete_header(f"{image}", f"{image}.unpack", header, 0)
       display(f"Done, image extracted as {image}.unpack\n")
     elif sys.argv[1] == "-c":
-       # TODO: Implement a cleaner way to remove all files (i.e: Using glob.glob).
-       shCommand("rm *.img && rm *.ext4 && rm *.unpack", "out")
+       unpack_files = grep_filetype("unpack")
+       ext4_files = grep_filetype("ext4")
+       img_files = grep_filetype("img")
+       remove_files(img_files)
+       remove_files(ext4_files)
+       remove_files(unpack_files)
        if os.path.exists("system_out"):
            shutil.rmtree("system_out")
        if os.path.exists("system_out_old"):
