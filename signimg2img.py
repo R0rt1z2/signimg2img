@@ -105,12 +105,8 @@ def delete_header(image, outimage, hdr_type, offset):
     else:
        raise Exception("Must be SSSS or BFBF not {}".format(hdr_type))
 
-def check_header(image, ext):
-    if ext == "img":
-        images = str(grep_filetype("img"))
-    elif ext == "bin":
-        images = str(grep_filetype("bin"))
-    if image in images:
+def check_header(image):
+    try:
       with open(image, "rb") as binary_file:
          data = binary_file.read(4)
          img_hdr, = struct.unpack('<I', data)
@@ -131,7 +127,7 @@ def check_header(image, ext):
       else:
          display("This is not a signed image!!\n")
          exit()
-    else:
+    except FileNotFoundError:
       raise RuntimeError("Cannot find {}. Is it in the correct path?".format(image))
       exit()    
 
@@ -159,7 +155,12 @@ def unpack_system(header):
 
 def oldfiles():
        display("Removing old files if they're present...")
-       shCommand("rm boot.img && rm recovery.img && system.img && rm system.ext4 && rm -rf system_out && rm *.unpack && rm *.tmp", "out")
+       unpack_files = grep_filetype("unpack")
+       ext4_files = grep_filetype("ext4")
+       img_files = grep_filetype("img")
+       remove_files(img_files)
+       remove_files(ext4_files)
+       remove_files(unpack_files)
        if os.path.exists("system_out"):
            shCommand("mv system_out system_out_old", "out")
 
@@ -183,49 +184,38 @@ def main():
          help()      
     elif sys.argv[1] == "-s":
       display("Selected: Unpack system-sign.img")
-      check_header("system-sign.img", "img")
+      check_header("system-sign.img")
       unpack_system(header)
     elif sys.argv[1] == "-b":
       display("Selected Image to unpack: boot-sign.img")
-      check_header("boot-sign.img", "img")
+      check_header("boot-sign.img")
       oldfiles()
       delete_header("boot-sign.img", "boot.img", header, 0)
       display("Done, image extracted as boot.img\n")
     elif sys.argv[1] == "-r":
       display("Selected: Unpack recovery-sign.img")
-      check_header("recovery-sign.img", "img")
+      check_header("recovery-sign.img")
       oldfiles()
       delete_header("recovery-sign.img", "recovery.img", header, 0)
       display("Done, image extracted as recovery.img\n")
     elif sys.argv[1] == "-o":
-      image = sys.argv[2]
-      if "bin" in sys.argv[2]:
-         imgis = "bin"
-      elif "img" in sys.argv[2]:
-         imgis = "img"
-      check_header(image, imgis)
+      check_header(sys.argv[2])
       if header is "SSSS":
-          offset = get_offset(image)
+          offset = get_offset(sys.argv[2])
           display(f'Offset: {offset}')
-      with open(image, "rb") as fin:
+      with open(sys.argv[2], "rb") as fin:
         data = len(fin.read())
       display(f'Size: {data} bytes')
       if header is "BFBF" or "SSSS":
-         unpack = "yes"
+          display(f'Image can be unpacked: yes\n')
       else:
-         unpack = "no"
-      display(f'Image can be unpacked: {unpack}\n')
+          display(f'Image can be unpacked: no (invalid header)\n')
     elif sys.argv[1] == "-i":
-      image = sys.argv[2]
-      display(f"Selected: Unpack {image}")
-      if "bin" in sys.argv[2]:
-         imgis = "bin"
-      elif "img" in sys.argv[2]:
-         imgis = "img"
-      check_header(sys.argv[2], imgis)
+      display(f"Selected: Unpack {sys.argv[1]}")
+      check_header(sys.argv[2])
       oldfiles()
-      delete_header(f"{image}", f"{image}.unpack", header, 0)
-      display(f"Done, image extracted as {image}.unpack\n")
+      delete_header(f"{sys.argv[2]}", f"{sys.argv[2]}.unpack", header, 0)
+      display(f"Done, image extracted as {sys.argv[2]}.unpack\n")
     elif sys.argv[1] == "-c":
        unpack_files = grep_filetype("unpack")
        ext4_files = grep_filetype("ext4")
