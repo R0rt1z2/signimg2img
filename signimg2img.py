@@ -44,7 +44,7 @@ SRC_HEADERS = [
 
 BFBF_SIZE = 16448
 
-str_start_addr = 0x000010 # 16 bytes after the BFBF header
+str_start_addr = 0x000010
 
 # Check for platform
 if sys.platform.startswith("linux") or ("win"):
@@ -70,7 +70,6 @@ def shCommand(sh_command, stderr):
     else:
        call(sh_command, shell=True)
 
-# display and shCommand should be the first functions. If not, will cause errors.
 
 def get_offset(image):
     # Thanks to carlitos900 for the shell method.
@@ -78,7 +77,7 @@ def get_offset(image):
     # This is for little endian arch.
     image = open(image, 'rb')
     image.read(60) # Header
-    offset, = struct.unpack('<I', image.read(4)) # SSSS 4 bytes ---> <I
+    offset, = struct.unpack('<I', image.read(4))
     return offset
     
 def grep_filetype(type):
@@ -91,7 +90,7 @@ def remove_files(files):
     cmd = " ".join(("rm", cmd))
     shCommand(cmd, "out")
 
-def delete_header(image, outimage, hdr_type, offset): # If there's no need of offset (i.e: "BFBF" use "0")
+def delete_header(image, outimage, hdr_type, offset):
     display("Deleting the header...")
     if hdr_type == "BFBF":
        time.sleep(0.5)
@@ -101,7 +100,7 @@ def delete_header(image, outimage, hdr_type, offset): # If there's no need of of
     elif hdr_type == "SSSS":
        if sys.platform.startswith("win"):
           raise RuntimeError("Windows cannot unpack SSSS header!")
-       shCommand(f'dd if=system-sign.img of=system.img iflag=count_bytes,skip_bytes bs=8192 skip=64 count={offset}', "out") # dd command to delete "SSSS" header. Needs defined offset.
+       shCommand(f'dd if=system-sign.img of=system.img iflag=count_bytes,skip_bytes bs=8192 skip=64 count={offset}', "out")
        display("Header remove complete!")
     else:
        raise Exception("Must be SSSS or BFBF not {}".format(hdr_type))
@@ -113,14 +112,14 @@ def check_header(image, ext):
         images = str(grep_filetype("bin"))
     if image in images:
       with open(image, "rb") as binary_file:
-         data = binary_file.read(4) # First 4 bytes show header string.
-         img_hdr, = struct.unpack('<I', data) # 4 bytes ---> <I
-         binary_file.seek(str_start_addr) # Go to the string offset.
+         data = binary_file.read(4)
+         img_hdr, = struct.unpack('<I', data)
+         binary_file.seek(str_start_addr) 
          try:
-             img_string = (binary_file.read(8)).decode("utf-8") # Read the string offset
+             img_string = (binary_file.read(8)).decode("utf-8")
          except UnicodeDecodeError:
              display("Warning: Cannot parse the string inside the image..")
-         global header # Define here the header variable, otherwise will fail.
+         global header
       if img_hdr == SRC_HEADERS[0]:
          display(f"Header is BFBF: {img_hdr}")
          display(f"Found {img_string} at {str_start_addr}")
