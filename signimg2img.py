@@ -39,7 +39,7 @@ __pyver__ = str(__pyver__[0])
 # Defines
 SRC_HEADERS = [
 	1178748482,\
-        1397969747
+    1397969747
 ]
 
 BFBF_SIZE = 16448
@@ -116,7 +116,10 @@ def check_header(image, ext):
          data = binary_file.read(4) # First 4 bytes show header string.
          img_hdr, = struct.unpack('<I', data) # 4 bytes ---> <I
          binary_file.seek(str_start_addr) # Go to the string offset.
-         img_string = (binary_file.read(8)).decode("utf-8") # Read the string offset
+         try:
+             img_string = (binary_file.read(8)).decode("utf-8") # Read the string offset
+         except UnicodeDecodeError:
+             display("Warning: Cannot parse the string inside the image..")
          global header # Define here the header variable, otherwise will fail.
       if img_hdr == SRC_HEADERS[0]:
          display(f"Header is BFBF: {img_hdr}")
