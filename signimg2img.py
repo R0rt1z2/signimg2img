@@ -180,7 +180,6 @@ def main():
     if len(sys.argv) == 1:
          display("Expected more arguments.\n")
          help()
-         exit()
     elif sys.argv[1] == "-h":
          help()      
     elif sys.argv[1] == "-s":
@@ -217,7 +216,6 @@ def main():
       else:
          unpack = "no"
       display(f'Image can be unpacked: {unpack}\n')
-      exit()
     elif sys.argv[1] == "-i":
       image = sys.argv[2]
       display(f"Selected: Unpack {image}")
@@ -244,7 +242,6 @@ def main():
     else:
       display("Invalid option: {}\n".format(sys.argv[1]))
       help()
-      exit()
 
 if __name__ == "__main__":
    main()
