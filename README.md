@@ -20,7 +20,7 @@ How to unpack?
 
 Example of system-sign (SSSS) unpack output:
 ```
-r0rtiz2@r0rtiz2:~/signimg2img$ python3 signimg2img.py -s
+r0rtiz2@r0rtiz2:~/signimg2img$ python3 signimg2img.py -u system-sign.img
 
 signimg2img binary - version: 1.3
 
@@ -33,7 +33,7 @@ signimg2img binary - version: 1.3
 [signimg2img-log] Header remove complete!
 [signimg2img-log] Converting to ext4 image...
 [signimg2img-log] Unpacking system image...
-[signimg2img-log] system-sign.img extracted at >>system_out<<
+[signimg2img-log] system-sign.img extracted at system_out
 
 r0rtiz2@r0rtiz2:~/signimg2img$ 
 ```
@@ -45,12 +45,10 @@ Supported headers:
 
 Available options (Use -h to see them in the tool):
 =====================================
-* -b: Convert Android Signed Boot Image.
-* -r: Convert Android Signed Recovery Image.
-* -s: Convert & extract Android Signed System Image.
-* -i: Convert any other image (i.e: cache-sign, lk-sign, etc).
+* -u: Unsign the given image (if it's system the tool will try to unpack it aswell).
 * -o: Get image info (-o image_name).
-* -c: Full cleanup (removes all!)
+* -c: Full cleanup (removes all!).
+* -h: Show all the commands.
 
 Supported images:
 =====================================
@@ -66,3 +64,4 @@ Thanks to:
 =====================================
 * anestisb for his simg2img.
 * carlitos900 and kjones for the help with the SSSS header.
+

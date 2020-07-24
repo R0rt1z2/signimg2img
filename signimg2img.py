@@ -21,7 +21,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-#   All copyrights of simg2img goes for anestisb.
+#   Thanks to anestisb (simg2img), no copyright asserted by them.
 
 from subprocess import *
 from sys import version_info as __pyver__
@@ -32,11 +32,9 @@ import time
 import shutil
 import os
 
-# Defines section
 __version__ = '1.3'
 __pyver__ = str(__pyver__[0])
 
-# Defines
 SRC_HEADERS = [
 	1178748482,\
     1397969747
@@ -44,16 +42,12 @@ SRC_HEADERS = [
 
 BFBF_SIZE = 16448
 
-str_start_addr = 0x000010
-
-# Check for platform
 if sys.platform.startswith("linux") or ("win"):
     print("")
 else:
     print("Unsopported platform!")
     exit()
 
-# Check for python ver
 if __pyver__[0] == "3":
     time.sleep(0.1)
 else:
@@ -64,65 +58,51 @@ def display(s):
     text = "[signimg2img-log] {}".format(s)
     print(text)
 
-def shCommand(sh_command, stderr):
-    if stderr == "out":
+def shCommand(sh_command, output):
+    if output is 0:
        call(sh_command, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
     else:
        call(sh_command, shell=True)
-
 
 def get_offset(image):
     # Thanks to carlitos900 for the shell method.
     # This is the "pythonic" method.
     # This is for little endian arch.
     image = open(image, 'rb')
-    image.read(60) # Header
-    offset, = struct.unpack('<I', image.read(4))
+    image.read(60)
+    offset = struct.unpack('<I', image.read(4))[0]
     return offset
-    
-def grep_filetype(type):
-    typefiles = str(glob.glob("*.{}".format(type)))
-    typefiles = typefiles.replace("[", "").replace("'", "").replace("]", "").replace(",", "")
-    return typefiles
-
-def remove_files(files):
-    cmd = files.replace(" ", " & rm ")
-    cmd = " ".join(("rm", cmd))
-    shCommand(cmd, "out")
 
 def delete_header(image, outimage, hdr_type, offset):
     display("Deleting the header...")
     if hdr_type == "BFBF":
-       time.sleep(0.5)
        with open(image, 'rb') as in_file:
           with open(outimage, 'wb') as out_file:
             out_file.write(in_file.read()[BFBF_SIZE:])
     elif hdr_type == "SSSS":
        if sys.platform.startswith("win"):
           raise RuntimeError("Windows cannot unpack SSSS header!")
-       shCommand(f'dd if=system-sign.img of=system.img iflag=count_bytes,skip_bytes bs=8192 skip=64 count={offset}', "out")
+       shCommand("dd if=system-sign.img of=system.img iflag=count_bytes,skip_bytes bs=8192 skip=64 count={}".format(offset), 0)
        display("Header remove complete!")
     else:
        raise Exception("Must be SSSS or BFBF not {}".format(hdr_type))
 
 def check_header(image):
     try:
-      with open(image, "rb") as binary_file:
-         data = binary_file.read(4)
-         img_hdr, = struct.unpack('<I', data)
-         binary_file.seek(str_start_addr) 
+      with open(image, "rb") as image:
+         image_header = struct.unpack('<I', image.read(4))[0]
+         image.seek(0x000010) 
          try:
-             img_string = (binary_file.read(8)).decode("utf-8")
+             img_string = (image.read(8)).decode("utf-8")
          except UnicodeDecodeError:
              display("Warning: Cannot parse the string inside the image..")
-         global header
-      if img_hdr == SRC_HEADERS[0]:
-         display(f"Header is BFBF: {img_hdr}")
-         display(f"Found {img_string} at {str_start_addr}")
+             global header
+      if image_header == SRC_HEADERS[0]:
+         display("Header is BFBF: {}".format(image_header))
+         display("Found {} at 0x000010".format(img_string))
          header = "BFBF"
-         return
-      elif img_hdr == SRC_HEADERS[1]:
-         display(f"Header is SSSS: {img_hdr}")
+      elif image_header == SRC_HEADERS[1]:
+         display("Header is SSSS: {}".format(image_header))
          header = "SSSS"
       else:
          display("This is not a signed image!!\n")
@@ -137,7 +117,7 @@ def unpack_system(header):
       elif header == "SSSS":
           display("Getting the offset...")
           offset = get_offset("system-sign.img")
-          display(f'Got {offset} as offset!')
+          display("Got {} as offset!".format(offset))
           delete_header("system-sign.img", "system.img", header, offset)
       display("Converting to ext4 image...")
       p = Popen("simg2img system.img system.ext4", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
@@ -145,35 +125,38 @@ def unpack_system(header):
         raise RuntimeError("simg2img is not installed!")
       display("Unpacking system image...")
       if os.path.exists("system_out"):
-          shCommand("sudo umount system_out", "noout")
+          shCommand("sudo umount system_out", 0)
           os.rmdir("system_out")
           os.mkdir("system_out")
-      shCommand("sudo mount -r -t ext4 -o loop system.ext4 system_out", "noout")
-      shCommand("sudo chown -R $USER:$USER system_out", "noout")
+      else:
+          os.mkdir("system_out")
+      shCommand("mount -r -t ext4 -o loop system.ext4 system_out", 0)
       display("system-sign.img extracted at system_out\n")
       exit()
 
-def rm_old_files(image):
-       display("Removing old files if they're present...")
-       if os.path.isfile("signimg2img.py"):
-           for file in glob.glob('*.*'):
-               if file.endswith(".unpack") or file.endswith(".ext4"):
-                   os.remove(file)
-               elif file.startswith("signimg2img") or file.endswith("-sign.img") or file.startswith("LICENSE") or file.startswith("README"):
+def remove_old_files(image):
+    display("Removing old files if they're present...")
+    if os.path.isfile("signimg2img.py"):
+       for file in glob.glob('*.*'):
+           if image is "full":
+               if file.startswith("signimg2img") or file.startswith("LICENSE") or file.startswith("README"):
                    pass
                else:
                    os.remove(file)
+           elif file.endswith(".unpack") or file.endswith(".ext4"):
+               os.remove(file)
+           elif file.startswith("signimg2img") or file.endswith("-sign.img") or file.startswith("LICENSE") or file.startswith("README"):
+               pass
+           else:
+               os.remove(file)
 
 def help():
-         display("USAGE: signimg2img.py -option:\n")
-         print("     -b: Convert Android Signed Boot Image.")
-         print("     -r: Convert Android Signed Recovery Image.")
-         print("     -s: Convert & extract Android Signed System Image.")
-         print("     -i: Convert any other image (i.e: cache-sign, lk-sign, etc).")
-         print("     -o: Get image info (-o image_name).")
-         print("     -c: Full cleanup (removes all!)")
-         print("")
-         exit()
+    display("USAGE: signimg2img.py -option:\n")
+    print("   -u image-sign.img: Unsigns the given image. (If is system will unpack it)")
+    print("   -o: Get image info (-o image_name).")
+    print("   -c: Full cleanup (removes all!)")
+    print("")
+    exit()
 
 def main():
     print('signimg2img binary - version: {}\n'.format(__version__))
@@ -181,56 +164,39 @@ def main():
          display("Expected more arguments.\n")
          help()
     elif sys.argv[1] == "-h":
-         help()      
-    elif sys.argv[1] == "-s":
-      display("Selected: Unpack system-sign.img")
-      check_header("system-sign.img")
-      unpack_system(header)
-    elif sys.argv[1] == "-b":
-      display("Selected Image to unpack: boot-sign.img")
-      check_header("boot-sign.img")
-      rm_old_files("boot-sign.img")
-      delete_header("boot-sign.img", "boot.img", header, 0)
-      display("Done, image extracted as boot.img\n")
-    elif sys.argv[1] == "-r":
-      display("Selected: Unpack recovery-sign.img")
-      check_header("recovery-sign.img")
-      rm_old_files("recovery-sign.img")
-      delete_header("recovery-sign.img", "recovery.img", header, 0)
-      display("Done, image extracted as recovery.img\n")
+         help()
+    elif sys.argv[1] == "-u" and len(sys.argv) != 1:
+      display("Selected: Unpack {}".format(sys.argv[2]))
+      check_header(sys.argv[2])
+      remove_old_files(sys.argv[2])
+      if "system" in sys.argv[2]:
+          unpack_system(header)
+      else:
+          delete_header(sys.argv[2], "{}.unpack".format(sys.argv[2]), header, 0)
+          display("Done, image extracted as {}.unpack\n".format(sys.argv[2]))
     elif sys.argv[1] == "-o":
       check_header(sys.argv[2])
       if header is "SSSS":
           offset = get_offset(sys.argv[2])
-          display(f'Offset: {offset}')
-      with open(sys.argv[2], "rb") as fin:
-        data = len(fin.read())
-      display(f'Size: {data} bytes')
+          display("Offset: {}".format(offset))
+      display("Size: {} bytes".format(os.path.getsize(sys.argv[2])))
       if header is "BFBF" or "SSSS":
-          display(f'Image can be unpacked: yes\n')
+          display("Image can be unpacked: yes\n")
       else:
-          display(f'Image can be unpacked: no (invalid header)\n')
-    elif sys.argv[1] == "-i":
-      display(f"Selected: Unpack {sys.argv[1]}")
-      check_header(sys.argv[2])
-      rm_old_files(sys.argv[2])
-      delete_header(f"{sys.argv[2]}", f"{sys.argv[2]}.unpack", header, 0)
-      display(f"Done, image extracted as {sys.argv[2]}.unpack\n")
+          display("Image can be unpacked: no (invalid header)\n")
     elif sys.argv[1] == "-c":
-       unpack_files = grep_filetype("unpack")
-       ext4_files = grep_filetype("ext4")
-       img_files = grep_filetype("img")
-       remove_files(img_files)
-       remove_files(ext4_files)
-       remove_files(unpack_files)
+       remove_old_files("full")
        if os.path.exists("system_out"):
-           shutil.rmtree("system_out")
-       if os.path.exists("system_out_old"):
-           shutil.rmtree("system_out_old")
+          p = Popen("umount system_out", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+          if(len(p.stderr.read()) != 0):
+              raise RuntimeError("Cannot unmount the system_out folder!")
+          shutil.rmtree("system_out")
        display("Cleaned up!\n")    
     else:
       display("Invalid option: {}\n".format(sys.argv[1]))
       help()
 
 if __name__ == "__main__":
+   if os.getuid() != 0:
+       raise RuntimeError("Script must be ran as root")
    main()
