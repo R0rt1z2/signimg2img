@@ -132,7 +132,6 @@ def check_header(image):
       exit()    
 
 def unpack_system(header):
-      oldfiles()
       if header == "BFBF":
           delete_header("system-sign.img", "system.img", header, 0)
       elif header == "SSSS":
@@ -145,24 +144,25 @@ def unpack_system(header):
       if(len(p.stderr.read()) != 0):
         raise RuntimeError("simg2img is not installed!")
       display("Unpacking system image...")
-      os.mkdir("system_out")
-      shCommand("sudo mount -r -t ext4 -o loop system.ext4 /mnt", "noout")
-      shCommand("sudo cp -r /mnt/* system_out", "noout")
-      shCommand("sudo umount /mnt", "noout")
+      if os.path.exists("system_out"):
+          shCommand("sudo umount system_out", "noout")
+          os.rmdir("system_out")
+          os.mkdir("system_out")
+      shCommand("sudo mount -r -t ext4 -o loop system.ext4 system_out", "noout")
       shCommand("sudo chown -R $USER:$USER system_out", "noout")
-      display("system-sign.img extracted at >>system_out<<\n")
+      display("system-sign.img extracted at system_out\n")
       exit()
 
-def oldfiles():
+def rm_old_files(image):
        display("Removing old files if they're present...")
-       unpack_files = grep_filetype("unpack")
-       ext4_files = grep_filetype("ext4")
-       img_files = grep_filetype("img")
-       remove_files(img_files)
-       remove_files(ext4_files)
-       remove_files(unpack_files)
-       if os.path.exists("system_out"):
-           shCommand("mv system_out system_out_old", "out")
+       if os.path.isfile("signimg2img.py"):
+           for file in glob.glob('*.*'):
+               if file.endswith(".unpack") or file.endswith(".ext4"):
+                   os.remove(file)
+               elif file.startswith("signimg2img") or file.endswith("-sign.img") or file.startswith("LICENSE") or file.startswith("README"):
+                   pass
+               else:
+                   os.remove(file)
 
 def help():
          display("USAGE: signimg2img.py -option:\n")
@@ -189,13 +189,13 @@ def main():
     elif sys.argv[1] == "-b":
       display("Selected Image to unpack: boot-sign.img")
       check_header("boot-sign.img")
-      oldfiles()
+      rm_old_files("boot-sign.img")
       delete_header("boot-sign.img", "boot.img", header, 0)
       display("Done, image extracted as boot.img\n")
     elif sys.argv[1] == "-r":
       display("Selected: Unpack recovery-sign.img")
       check_header("recovery-sign.img")
-      oldfiles()
+      rm_old_files("recovery-sign.img")
       delete_header("recovery-sign.img", "recovery.img", header, 0)
       display("Done, image extracted as recovery.img\n")
     elif sys.argv[1] == "-o":
@@ -213,7 +213,7 @@ def main():
     elif sys.argv[1] == "-i":
       display(f"Selected: Unpack {sys.argv[1]}")
       check_header(sys.argv[2])
-      oldfiles()
+      rm_old_files(sys.argv[2])
       delete_header(f"{sys.argv[2]}", f"{sys.argv[2]}.unpack", header, 0)
       display(f"Done, image extracted as {sys.argv[2]}.unpack\n")
     elif sys.argv[1] == "-c":
