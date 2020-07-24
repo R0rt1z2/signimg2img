@@ -32,7 +32,7 @@ import time
 import shutil
 import os
 
-__version__ = '1.3'
+__version__ = '1.4'
 __pyver__ = str(__pyver__[0])
 
 SRC_HEADERS = [
