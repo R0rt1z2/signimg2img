@@ -1,4 +1,4 @@
-IMG-SIGN Extractor (signimg2img) v1.3
+IMG-SIGN Extractor (signimg2img) v1.4
 =====================================
 This script, allows you to unpack/delete the header of Android Signed Images.
 
@@ -22,7 +22,7 @@ Example of system-sign (SSSS) unpack output:
 ```
 r0rtiz2@r0rtiz2:~/signimg2img$ python3 signimg2img.py -u system-sign.img
 
-signimg2img binary - version: 1.3
+signimg2img binary - version: 1.4
 
 [signimg2img-log] Selected: Unpack system-sign.img
 [signimg2img-log] Header is SSSS: 1397969747
