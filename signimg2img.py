@@ -122,7 +122,7 @@ def unpack_system(header):
       display("Converting to ext4 image...")
       p = Popen("simg2img system.img system.ext4", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
       if(len(p.stderr.read()) != 0):
-        raise RuntimeError("simg2img is not installed!")
+        raise RuntimeError("Something went wrong while converting to ext4 image. Is simg2img installed? Bailing out...")
       display("Unpacking system image...")
       if os.path.exists("system_out"):
           shCommand("sudo umount system_out", 0)
