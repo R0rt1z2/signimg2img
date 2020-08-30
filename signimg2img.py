@@ -70,7 +70,7 @@ def delete_header(image, outimage, hdr_type, offset):
             out_file.write(in_file.read()[BFBF_SIZE:])
     elif hdr_type == "SSSS":
        if sys.platform.startswith("win"):
-          raise RuntimeError("Windows cannot unpack SSSS header!")
+          raise RuntimeError("Windows cannot unpack images with SSSS header!")
        shCommand("dd if=system-sign.img of=system.img iflag=count_bytes,skip_bytes bs=8192 skip=64 count={}".format(offset), 0)
        display("Header remove complete!")
     else:
