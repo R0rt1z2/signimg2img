@@ -76,6 +76,14 @@ def delete_header(image, outimage, hdr_type, offset):
     else:
        raise Exception("Must be SSSS or BFBF not {}".format(hdr_type))
 
+def regen_folder(folder):
+    try:
+        os.rmdir(folder)
+    except OSError:
+        display("Warning: {} isn't empty...".format(folder))
+        shutil.rmtree(folder)
+    os.mkdir(folder)
+
 def check_header(image):
     try:
       with open(image, "rb") as image:
@@ -115,8 +123,7 @@ def unpack_system(header):
       display("Unpacking system image...")
       if os.path.exists("system_out"):
           shCommand("sudo umount system_out", 0)
-          os.rmdir("system_out")
-          os.mkdir("system_out")
+          regen_folder("system_out")
       else:
           os.mkdir("system_out")
       shCommand("mount -r -t ext4 -o loop system.ext4 system_out", 0)
