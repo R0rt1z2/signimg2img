@@ -24,7 +24,6 @@
 #   Thanks to anestisb (simg2img), no copyright asserted by them.
 
 from subprocess import *
-from sys import version_info as __pyver__
 import struct
 import sys
 import glob
@@ -33,7 +32,6 @@ import shutil
 import os
 
 __version__ = '1.4'
-__pyver__ = str(__pyver__[0])
 
 SRC_HEADERS = [
 	1178748482,\
@@ -42,17 +40,11 @@ SRC_HEADERS = [
 
 BFBF_SIZE = 16448
 
-if sys.platform.startswith("linux") or ("win"):
-    print("")
-else:
-    print("Unsopported platform!")
-    exit()
+if not sys.platform.startswith("darwin") or not ("win"):
+    raise Exception("Unsopported platform")
 
-if __pyver__[0] == "3":
-    time.sleep(0.1)
-else:
-    print(f'Invalid Python Version.. You need python 3.X to use this script. Your Version is: {__pyver__}\n')
-    exit()
+if sys.version_info[0] != 3:
+    raise Exception("Python 3.x is required")
 
 def display(s):
     text = "[signimg2img-log] {}".format(s)
