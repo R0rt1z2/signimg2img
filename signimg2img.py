@@ -40,8 +40,10 @@ SRC_HEADERS = [
 
 BFBF_SIZE = 16448
 
-if not sys.platform.startswith("darwin") or not ("win"):
-    raise Exception("Unsopported platform")
+if sys.platform.startswith("darwin") or sys.platform.startswith("win") or sys.platform.startswith("linux"):
+    pass
+else:
+    raise Exception("Unsupported platform")
 
 if sys.version_info[0] != 3:
     raise Exception("Python 3.x is required")
