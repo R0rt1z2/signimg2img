@@ -57,9 +57,6 @@ def shCommand(sh_command, output):
        call(sh_command, shell=True)
 
 def get_offset(image):
-    # Thanks to carlitos900 for the shell method.
-    # This is the "pythonic" method.
-    # This is for little endian arch.
     image = open(image, 'rb')
     image.read(60)
     offset = struct.unpack('<I', image.read(4))[0]
